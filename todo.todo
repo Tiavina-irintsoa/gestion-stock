@@ -1,0 +1,46 @@
+Etat de stock:
+    ✔ unite: idUnite, nomUnite @done(23-11-07 08:29)
+    ✔ article: idArticle (str), nomArticle, idUnite, int methodeStockage @done(23-11-07 08:29)
+    ✔ magasin: idMgasin, nomMagasin @done(23-11-07 08:33)
+    ✔ mouvement : idMouvement, idArticle, date, quantite_entree,quantite_sortie, entree, sortie, compte, idmagasin @done(23-11-07 08:35)
+    ✔ vue: v_mvt @done(23-11-07 10:00)
+    ✔ vue: v_entree_reste (idMouvement, reste, idArtcile,idMagasin) @done(23-11-07 10:06)
+    ✔ classe unite @done(23-11-07 10:07)
+    ✔ classe magasin @done(23-11-07 10:09)
+    ✔ classe article @done(23-11-07 10:10)
+    ✔ classe mouvement @done(23-11-07 10:12)
+    ✔ classe stock @done(23-11-07 10:28)
+    ✔ classe etatStock @done(23-11-07 10:28)
+    ☐ mouvement.getMouvement(min,max,idarticle, idmagasin)
+    ☐ stock.getMouvement (min,max,idmagasin)
+    ☐ stock.getMouvementAvantDate1
+    ☐ stock.getMouvementAvantDate2
+    ☐ stock.getStockParEntree
+    ☐ stock.completeData(date1,date2,magasin)
+    ☐ getQuantiteResteEntreDate1Date2 ()
+    ☐ getQteInitiale
+    ☐ getReste()
+    ☐ getMontant()
+    ☐ getter et setters string
+    ☐ etatStock.getMontant()
+    ☐ etatStock.getStock(string date1, stringdate2, string idatricile,string idmagasin)
+    ☐ constructeurs (string date1, stringdate2, string idatricile,string idmagasin)
+    ☐ getStocks()
+
+Insert:
+    ☐ produit.getProduitById()
+    ☐ produit.getOrderString()
+    ☐ magasin.getMagasinById()
+    ☐ magasin.exist()
+    ☐ produit.exists()
+    ☐ stock.getStock()
+    ☐ verifierStock()
+    ☐ mouvement.controle()
+    ☐ mouvement.getEntree() 
+    ☐ mouvement.getMouvementResultant()
+    ☐ insert()
+    ☐ sortir(String date, String mag, String idarticle, String quantite)
+    ☐ constructeur(String date, String mag, String idarticle, String quantite)
+    ☐ 
+
+
