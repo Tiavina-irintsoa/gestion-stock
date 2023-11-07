@@ -31,4 +31,11 @@ public class Magasin {
   public void setNomMagasin(String nomMagasin) {
     this.nomMagasin = nomMagasin;
   }
+
+  @Override
+  public String toString() {
+    return (
+      "Magasin [idMagasin=" + idMagasin + ", nomMagasin=" + nomMagasin + "]"
+    );
+  }
 }

@@ -21,5 +21,6 @@ create table mouvement (
     quantite_sortie numeric,
     entree integer references mouvement(idmouvement), 
     sortie integer references mouvement(idmouvement), 
-    idmagasin integer references magasin(idmagasin)
+    idmagasin integer references magasin(idmagasin), 
+    prixUnitaire numeric
 );

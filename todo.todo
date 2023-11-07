@@ -2,7 +2,7 @@ Etat de stock:
     ✔ unite: idUnite, nomUnite @done(23-11-07 08:29)
     ✔ article: idArticle (str), nomArticle, idUnite, int methodeStockage @done(23-11-07 08:29)
     ✔ magasin: idMgasin, nomMagasin @done(23-11-07 08:33)
-    ✔ mouvement : idMouvement, idArticle, date, quantite_entree,quantite_sortie, entree, sortie, compte, idmagasin @done(23-11-07 08:35)
+    ✔ mouvement : idMouvement, idArticle, date, quantite_entree,quantite_sortie, entree, sortie, compte, idmagasin, prixUnitaire @done(23-11-07 08:35)
     ✔ vue: v_mvt @done(23-11-07 10:00)
     ✔ vue: v_entree_reste (idMouvement, reste, idArtcile,idMagasin) @done(23-11-07 10:06)
     ✔ classe unite @done(23-11-07 10:07)
@@ -11,21 +11,26 @@ Etat de stock:
     ✔ classe mouvement @done(23-11-07 10:12)
     ✔ classe stock @done(23-11-07 10:28)
     ✔ classe etatStock @done(23-11-07 10:28)
-    ☐ mouvement.getMouvement(min,max,idarticle, idmagasin)
-    ☐ stock.getMouvement (min,max,idmagasin)
-    ☐ stock.getMouvementAvantDate1
-    ☐ stock.getMouvementAvantDate2
-    ☐ stock.getStockParEntree
-    ☐ stock.completeData(date1,date2,magasin)
-    ☐ getQuantiteResteEntreDate1Date2 ()
-    ☐ getQteInitiale
-    ☐ getReste()
-    ☐ getMontant()
-    ☐ getter et setters string
-    ☐ etatStock.getMontant()
-    ☐ etatStock.getStock(string date1, stringdate2, string idatricile,string idmagasin)
-    ☐ constructeurs (string date1, stringdate2, string idatricile,string idmagasin)
-    ☐ getStocks()
+    ✔ mouvement.getMouvement(min,max,idarticle, idmagasin) @done(23-11-07 19:45)
+    ✔ stock.getMouvementAvantDate1 @done(23-11-07 19:48)
+    ✔ stock.getMouvementAvantDate2 @done(23-11-07 19:48)
+    ✔ estEntree @done(23-11-07 20:10)
+    ✔ estSortie @done(23-11-07 20:10)
+    ✔ stock.getStockParEntree @done(23-11-07 20:10)
+    ✔ stock.completeData(date1,date2,magasin) @done(23-11-07 20:15)
+    ✔ Mouvement.calculReste(Mouvement[]) @done(23-11-07 20:20)
+    ✔ getQuantiteResteEntreDate1Date2 () @done(23-11-07 20:20)
+    ✔ getQteInitiale @done(23-11-07 20:16)
+    ✔ getReste() @done(23-11-07 20:20)
+    ✔ getMontant() @done(23-11-07 20:26)
+    ✔ getPrixUnitaire() @done(23-11-07 20:28)
+    ✔ getter et setters string @done(23-11-07 20:34)
+    ✔ etatStock.getMontant() @done(23-11-07 20:29)
+    ✔ etatStock.getStock(string date1, stringdate2, string idatricile,string idmagasin) @done(23-11-07 20:55)
+    ✔ constructeurs (string date1, stringdate2, string idatricile,string idmagasin) @done(23-11-07 20:35)
+    ✔ getProduitsConernes() @done(23-11-07 20:55)
+    ✔ getStocks() @done(23-11-07 20:55)
+    ☐ Test
 
 Insert:
     ☐ produit.getProduitById()

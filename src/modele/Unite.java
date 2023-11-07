@@ -6,7 +6,16 @@ public class Unite {
   String nomUnite;
   String abreviation;
 
-  public int getIdUnite() {
+  public Unite(int idUnite, String nomUnite, String abreviation) {
+    this.idUnite = idUnite;
+    this.nomUnite = nomUnite;
+    this.abreviation = abreviation;
+}
+
+public Unite() {
+}
+
+public int getIdUnite() {
     return idUnite;
   }
 

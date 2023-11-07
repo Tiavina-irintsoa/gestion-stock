@@ -1,6 +1,12 @@
 package modele;
 
+import connexion.Connect;
+import java.sql.Connection;
 import java.sql.Date;
+import java.sql.ResultSet;
+import java.sql.Statement;
+import java.util.Arrays;
+import java.util.Vector;
 
 public class EtatStock {
 
@@ -10,8 +16,132 @@ public class EtatStock {
   Stock[] listeStock;
   Magasin magasin;
 
+  public EtatStock(
+    String dateInitial,
+    String dateFinal,
+    String idArticle,
+    String idMagasin
+  ) throws Exception {
+    setDateInitial(dateInitial);
+    setDateFinal(dateFinal);
+    setArticle(idArticle);
+    setMagasin(idMagasin);
+  }
+
+  public static EtatStock getEtatStock(
+    String date1,
+    String date2,
+    String idarticle,
+    String idMagasin
+  ) throws Exception {
+    EtatStock etatStock = new EtatStock(date1, date2, idarticle, idMagasin);
+    etatStock.setListeStock(etatStock.listeStock());
+    return etatStock;
+  }
+
+  public Stock[] listeStock() throws Exception {
+    Vector<Stock> stocks = new Vector<Stock>();
+    Connect connect = new Connect();
+    Connection connection = connect.getConnectionPostgresql();
+    try {
+      Article[] articles = getProduitsConcernes(connection);
+      for (int i = 0; i < articles.length; i++) {
+        System.out.println(articles[i].getIdArticle());
+        Stock stock = new Stock(articles[i]);
+        stock.completeData(
+          dateInitial,
+          dateFinal,
+          magasin,
+          articles[i],
+          connection
+        );
+        stocks.add(stock);
+      }
+    } catch (Exception e) {
+      throw e;
+    } finally {
+      connection.close();
+    }
+    return stocks.toArray(new Stock[stocks.size()]);
+  }
+
+  public Article[] getProduitsConcernes(Connection connection)
+    throws Exception {
+    Vector<Article> articles = new Vector<Article>();
+    boolean opened = false;
+    if (connection == null) {
+      Connect c = new Connect();
+      connection = c.getConnectionPostgresql();
+      opened = true;
+    }
+    String sql =
+      "select * from v_article where idArticle like '" +
+      article.getIdArticle() +
+      "%'";
+    Statement stmt = connection.createStatement();
+    try {
+      ResultSet res = stmt.executeQuery(sql);
+      while (res.next()) {
+        articles.add(
+          new Article(
+            res.getString("idarticle"),
+            res.getString("nomarticle"),
+            res.getInt("methodeStockage"),
+            res.getInt("idunite"),
+            res.getString("nomunite"),
+            res.getString("abreviation")
+          )
+        );
+      }
+    } catch (Exception e) {
+      throw e;
+    } finally {
+      stmt.close();
+      if (opened) {
+        connection.close();
+      }
+    }
+    return articles.toArray(new Article[articles.size()]);
+  }
+
+  public void setDateInitial(String dateInitial) throws Exception {
+    try {
+      setDateInitial(Date.valueOf(dateInitial));
+    } catch (Exception e) {
+      throw new Exception("Date initiale invalide");
+    }
+  }
+
+  public void setDateFinal(String dateFinal) throws Exception {
+    try {
+      setDateFinal(Date.valueOf(dateFinal));
+    } catch (Exception e) {
+      throw new Exception("Date finale invalide");
+    }
+  }
+
+  public void setArticle(String id) {
+    setArticle(new Article(id));
+  }
+
+  public void setMagasin(String idMagasin) throws Exception {
+    try {
+      setMagasin(new Magasin(Integer.valueOf(idMagasin)));
+    } catch (Exception e) {
+      throw new Exception("Magasin non valide");
+    }
+  }
+
   public Date getDateInitial() {
     return dateInitial;
+  }
+
+  public double getMontantTotal() {
+    double s = 0;
+    for (Stock stock : listeStock) {
+      s += stock.getMontant();
+    }
+    return s;
   }
 
   public void setDateInitial(Date dateInitial) {
@@ -49,4 +179,10 @@ public class EtatStock {
   public void setMagasin(Magasin magasin) {
     this.magasin = magasin;
   }
+
+@Override
+public String toString() {
+    return "EtatStock [dateInitial=" + dateInitial + ", dateFinal=" + dateFinal + ", article=" + article
+            + ", listeStock=" + Arrays.toString(listeStock) + ", magasin=" + magasin + "]";
+}
 }
