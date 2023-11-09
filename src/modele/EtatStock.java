@@ -1,5 +1,9 @@
 package modele;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import connexion.Connect;
 import java.sql.Connection;
 import java.sql.Date;
@@ -15,6 +19,22 @@ public class EtatStock {
   Article article;
   Stock[] listeStock;
   Magasin magasin;
+
+  public String getJSON() throws Exception {
+    ObjectMapper objectMapper = new ObjectMapper();
+    objectMapper.enable(SerializationFeature.INDENT_OUTPUT);
+    ObjectNode objectNode = objectMapper.createObjectNode();
+    objectNode.put("dateInitiale", dateInitial.toString());
+    objectNode.put("dateFinale", dateFinal.toString());
+    objectNode.set("magasin", magasin.getObjectNode());
+    ArrayNode arrayNode = objectMapper.createArrayNode();
+    for (Stock stock : listeStock) {
+      arrayNode.add(stock.getJSON());
+    }
+    objectNode.set("listeStock",arrayNode);
+    System.out.println(objectNode.toString());
+    return objectNode.toString();
+  }
 
   public EtatStock(
     String dateInitial,
@@ -180,9 +200,20 @@ public class EtatStock {
     this.magasin = magasin;
   }
 
-@Override
-public String toString() {
-    return "EtatStock [dateInitial=" + dateInitial + ", dateFinal=" + dateFinal + ", article=" + article
-            + ", listeStock=" + Arrays.toString(listeStock) + ", magasin=" + magasin + "]";
-}
+  @Override
+  public String toString() {
+    return (
+      "EtatStock [dateInitial=" +
+      dateInitial +
+      ", dateFinal=" +
+      dateFinal +
+      ", article=" +
+      article +
+      ", listeStock=" +
+      Arrays.toString(listeStock) +
+      ", magasin=" +
+      magasin +
+      "]"
+    );
+  }
 }

@@ -1,19 +1,32 @@
 package modele;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import java.sql.Connection;
 import java.sql.Date;
+import java.util.Vector;
 
 public class Stock {
 
   Article article;
   Mouvement[] mouvementInitial;
   Mouvement[] mouvementEntreDate1Date2;
-  Mouvement[] entreeReste;
   double montant;
   double reste;
 
   public Stock(Article article) {
     setArticle(article);
+  }
+
+  public ObjectNode getJSON() {
+    ObjectMapper objectMapper = new ObjectMapper();
+    ObjectNode stockObject = objectMapper.createObjectNode();
+    stockObject.set("Article", article.getObjectNode());
+    stockObject.put("quantiteInitiale", getQuantiteInitial());
+    stockObject.put("reste", getReste());
+    stockObject.put("prixUnitaire", getPrixUnitaire());
+    stockObject.put("montant", getMontant());
+    return stockObject;
   }
 
   public void completeData(
@@ -27,9 +40,15 @@ public class Stock {
     setMouvementEntreDate1Date2(
       getMouvementEntreDate1Date2(con, date1, date2, magasin, article)
     );
-    setEntreeReste(getStockParEntree());
+    calculResteEntree();
     setMontant(calculMontant());
     setReste(calculReste());
+    for (Mouvement mouvement : mouvementInitial) {
+      System.out.println(mouvement);
+    }
+    for (Mouvement mouvement : mouvementEntreDate1Date2) {
+      System.out.println(mouvement);
+    }
   }
 
   public double getResteEntre() {
@@ -41,27 +60,32 @@ public class Stock {
   }
 
   public double calculMontant() {
-    double montant = 0;
-    int i = 0;
-    while (entreeReste[i] != null) {
-      montant +=
-        entreeReste[i].getQuantite_entree() * entreeReste[i].getPrixUnitaire();
-      System.out.println(
-        "montant +=" +
-        entreeReste[i].getQuantite_entree() +
-        "*" +
-        entreeReste[i].getPrixUnitaire()
-      );
-      i++;
-      if (i == entreeReste.length) {
-        break;
-      }
-    }
+    return (
+      calculMontant(mouvementInitial) + calculMontant(mouvementEntreDate1Date2)
+    );
+  }
 
-    return montant;
+  public double calculMontant(Mouvement[] mouvements) {
+    try {
+      double montant = 0;
+      int i = 0;
+      while (mouvements[i] != null) {
+        montant += mouvements[i].getReste() * mouvements[i].getPrixUnitaire();
+        i++;
+        if (i == mouvements.length) {
+          break;
+        }
+      }
+      return montant;
+    } catch (ArrayIndexOutOfBoundsException e) {
+      return 0;
+    }
   }
 
   public double getPrixUnitaire() {
+    if (getMontant() == 0 || getReste() == 0) {
+      return 0;
+    }
     return getMontant() / getReste();
   }
 
@@ -69,18 +93,37 @@ public class Stock {
     return Mouvement.getReste(mouvementInitial);
   }
 
-  public Mouvement[] getStockParEntree() {
-    Mouvement[] entree = Mouvement.copyArray(mouvementInitial);
+  public Mouvement[] getEntrees() {
+    Vector<Mouvement> entree = new Vector<Mouvement>();
+    for (int i = 0; i < mouvementInitial.length; i++) {
+      if (mouvementInitial[i].estEntree()) {
+        entree.add(new Mouvement(mouvementInitial[i]));
+      }
+    }
+    for (int i = 0; i < mouvementEntreDate1Date2.length; i++) {
+      if (mouvementEntreDate1Date2[i].estEntree()) {
+        entree.add(new Mouvement(mouvementEntreDate1Date2[i]));
+      }
+    }
+    return entree.toArray(new Mouvement[entree.size()]);
+  }
+
+  public void calculResteEntree() {
+    getResteParEntree(mouvementInitial);
+    getResteParEntree(mouvementEntreDate1Date2);
+  }
+
+  public void getResteParEntree(Mouvement[] entree) {
     for (int i = 0; i < entree.length; i++) {
       if (entree[i].estEntree()) {
         for (Mouvement sortie : mouvementEntreDate1Date2) {
           if (sortie.estSortie()) {
             if (
-              entree[i].idMouvement ==
+              entree[i].getIdMouvement() ==
               sortie.getEntreeCorrespondante().getIdMouvement()
             ) {
-              entree[i].setQuantite_entree(
-                  entree[i].getQuantite_entree() - sortie.getQuantite_sortie()
+              entree[i].setReste(
+                  entree[i].getReste() - sortie.getQuantite_sortie()
                 );
             }
             System.out.println(
@@ -91,13 +134,12 @@ public class Stock {
               sortie.getIdMouvement()
             );
           }
-          if (entree[i].getQuantite_entree() == 0) {
+          if (entree[i].getReste() == 0) {
             break;
           }
         }
       }
     }
-    return entree;
   }
 
   public Mouvement[] getMouvementAvantDate1(
@@ -143,14 +185,6 @@ public class Stock {
     Mouvement[] mouvementEntreDate1Date2
   ) {
     this.mouvementEntreDate1Date2 = mouvementEntreDate1Date2;
-  }
-
-  public Mouvement[] getEntreeReste() {
-    return entreeReste;
-  }
-
-  public void setEntreeReste(Mouvement[] entree) {
-    this.entreeReste = entree;
   }
 
   public double getMontant() {

@@ -1,11 +1,86 @@
 package modele;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import connexion.Connect;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.Statement;
+import javax.naming.spi.DirStateFactory.Result;
+
 public class Article {
 
   String idArticle;
   String nomArticle;
   Unite unite;
   int methodeStockage;
+
+  public String getOrderString() {
+    if (methodeStockage == -1) {
+      return "desc";
+    }
+    return "asc";
+  }
+
+  
+  public static Article getArticleById(String id, Connection connection)
+    throws Exception {
+    boolean opened = false;
+    if (connection == null) {
+      Connect c = new Connect();
+      connection = c.getConnectionPostgresql();
+      opened = true;
+    }
+    String sql = "select * from v_article where idarticle = '" + id + "'";
+    Statement stmt = connection.createStatement();
+    try {
+      ResultSet res = stmt.executeQuery(sql);
+      if (res.next() == false) {
+        return null;
+      }
+      return new Article(
+        res.getString("idarticle"),
+        res.getString("nomarticle"),
+        res.getInt("methodeStockage"),
+        res.getInt("idunite"),
+        res.getString("nomunite"),
+        res.getString("abreviation")
+      );
+    } catch (Exception e) {
+      throw e;
+    } finally {
+      stmt.close();
+      if (opened) {
+        connection.close();
+      }
+    }
+  }
+  public boolean exists( Connection con) throws Exception{
+    Article article = getArticleById(this.getIdArticle(), con);
+    if(article == null){
+      return false;
+    }
+    setMethodeStockage(article.getMethodeStockage());
+    setNomArticle(article.getNomArticle());
+    return true;
+  }
+  public ObjectNode getObjectNode() {
+    ObjectMapper objectMapper = new ObjectMapper();
+    ObjectNode objectNode = objectMapper.createObjectNode();
+
+    objectNode.put("idArticle", getIdArticle());
+    objectNode.put("nomArticle", getNomArticle());
+    objectNode.put("methodeStockage", getMethodeStockageString());
+    objectNode.set("unite", getUnite().getObjectNode());
+    return objectNode;
+  }
+
+  public String getMethodeStockageString() {
+    if (methodeStockage == -1) {
+      return "FIFO";
+    }
+    return "LIFO";
+  }
 
   public Article() {}
 

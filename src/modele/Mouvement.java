@@ -1,5 +1,6 @@
 package modele;
 
+import com.fasterxml.jackson.databind.util.ExceptionUtil;
 import connexion.Connect;
 import java.sql.Connection;
 import java.sql.Date;
@@ -21,6 +22,197 @@ public class Mouvement {
   Mouvement[] mouvementsResultants;
   Magasin magasin;
   double prixUnitaire;
+  double reste;
+
+  public static void sortir(
+    String date,
+    String mag,
+    String idarticle,
+    String quantite, Connection con
+  ) throws Exception{
+    Mouvement mouvement = new Mouvement(date, mag, idarticle, quantite);
+    mouvement.sortir(con);
+  }
+
+  public Mouvement(String date, String mag, String idarticle, String quantite)
+    throws Exception {
+    setDateMouvement(date);
+    setMagasin(mag);
+    setArticle(idarticle);
+    setQuantite_sortie(quantite);
+  }
+
+  public Mouvement(int id, double reste) {
+    setIdMouvement(id);
+    setReste(reste);
+  }
+
+  public void setQuantite_sortie(String quantite) throws Exception {
+    try {
+      setQuantite_sortie(Double.valueOf(quantite));
+    } catch (Exception e) {
+      throw new Exception("Quantite invalide");
+    }
+  }
+
+  public void setDateMouvement(String date) throws Exception {
+    try {
+      setDateMouvement(Date.valueOf(date));
+    } catch (Exception e) {
+      throw new Exception("Date invalide");
+    }
+  }
+
+  public void setMagasin(String idmagasin) {
+    setMagasin(Integer.valueOf(idmagasin));
+  }
+
+  public void sortir(Connection connection) throws Exception {
+    boolean opened = false;
+    if (connection == null) {
+      Connect c = new Connect();
+      connection = c.getConnectionPostgresql();
+      opened = true;
+    }
+    try {
+      controle(connection);
+      completeData(connection);
+      this.insert(connection);
+      for (Mouvement mouvement : mouvementsResultants) {
+        mouvement.insert(connection);
+      }
+    } catch (Exception e) {
+      throw e;
+    } finally {
+      if (opened) {
+        connection.close();
+      }
+    }
+  }
+
+  public Mouvement(double quantite_sortie, Mouvement entree, Mouvement sortie) {
+    setQuantite_sortie(quantite_sortie);
+    setEntreeCorrespondante(entree);
+    setSortieCorrespondante(sortie);
+    setArticle(sortie.getArticle());
+    setDateMouvement(sortie.getDateMouvement());
+    setMagasin(sortie.getMagasin());
+  }
+
+  public void completeData(Connection con) throws Exception {
+    setMouvementsResultants(getMouvementResultants(con));
+  }
+
+  public void insert(Connection connection) throws Exception {
+    boolean opened = false;
+    if (connection == null) {
+      Connect c = new Connect();
+      connection = c.getConnectionPostgresql();
+      opened = true;
+    }
+    String sql =
+      "insert into mouvement (idArticle, dateMouvement, quantite_entree, quantite_sortie, entree, sortie, idmagasin,prixUnitaire) values (?,?,?,?,?,?,?,?) returning idmouvement";
+
+    PreparedStatement pstmt = connection.prepareStatement(sql);
+    try {
+      pstmt.setString(1, getArticle().getIdArticle());
+      pstmt.setDate(2, getDateMouvement());
+      pstmt.setDouble(3, getQuantite_entree());
+      pstmt.setDouble(4, getQuantite_sortie());
+      pstmt.setInt(5, getEntreeCorrespondanteId());
+      pstmt.setInt(6, getSortieCorrespondanteId());
+      pstmt.setInt(7, getMagasin().getIdMagasin());
+      pstmt.setDouble(8, getPrixUnitaire());
+      ResultSet res = pstmt.executeQuery();
+      res.next();
+      setIdMouvement(res.getInt("idmouvement"));
+    } catch (Exception e) {
+      throw e;
+    } finally {
+      pstmt.close();
+      if (opened) {
+        connection.close();
+      }
+    }
+  }
+
+  public int getEntreeCorrespondanteId() {
+    if (entreeCorrespondante == null) {
+      return 0;
+    }
+    return entreeCorrespondante.getIdMouvement();
+  }
+
+  public int getSortieCorrespondanteId() {
+    if (sortieCorrespondante == null) {
+      return 0;
+    }
+    return sortieCorrespondante.getIdMouvement();
+  }
+
+  public Mouvement[] getMouvementResultants(Connection con) throws Exception {
+    Vector<Mouvement> resultants = new Vector<Mouvement>();
+    Mouvement[] avant = getEntreeAvant(con);
+    double sortietemp = getQuantite_sortie();
+    double a_sortir = 0;
+    for (Mouvement mouvement : avant) {
+      if (sortietemp > mouvement.getReste()) {
+        a_sortir = mouvement.getReste();
+      } else {
+        a_sortir = sortietemp;
+      }
+      resultants.add(new Mouvement(a_sortir, mouvement, this));
+      sortietemp = sortietemp - a_sortir;
+    }
+    return resultants.toArray(new Mouvement[resultants.size()]);
+  }
+
+  public Mouvement[] getEntreeAvant(Connection connection) throws Exception {
+    Vector<Mouvement> mouvements = new Vector<Mouvement>();
+    boolean opened = false;
+    if (connection == null) {
+      Connect c = new Connect();
+      connection = c.getConnectionPostgresql();
+      opened = true;
+    }
+    String sql =
+      "select v_entree.idmouvement, v_entree.quantite_entree - sum(v_sortie.quantite_sortie) as reste from v_entree join v_sortie on v_sortie.entree = v_entree.idmouvement where v_sortie.dateMouvement < '" +
+      dateMouvement +
+      "' and idMagasin =" +
+      this.magasin.getIdMagasin() +
+      " and idarticle = '" +
+      article.getIdArticle() +
+      "' group by v_entree.idmouvement order by v_entree.datemouvement " +
+      article.getOrderString();
+    System.out.println(sql);
+    Statement stmt = connection.createStatement();
+    try {
+      ResultSet res = stmt.executeQuery(sql);
+      while (res.next()) {
+        if (reste > 0) {
+          mouvements.add(
+            new Mouvement(res.getInt("idmouvement"), res.getDouble("reste"))
+          );
+        }
+      }
+    } catch (Exception e) {
+      throw e;
+    } finally {
+      stmt.close();
+      if (opened) {
+        connection.close();
+      }
+    }
+    return mouvements.toArray(new Mouvement[mouvements.size()]);
+  }
+
+  public double getReste() {
+    return reste;
+  }
+
+  public void setReste(double reste) {
+    this.reste = reste;
+  }
 
   public double getPrixUnitaire() {
     return prixUnitaire;
@@ -48,6 +240,7 @@ public class Mouvement {
     this.entreeCorrespondante = other.entreeCorrespondante;
     this.sortieCorrespondante = other.sortieCorrespondante;
     this.prixUnitaire = other.prixUnitaire;
+    this.reste = other.reste;
     if (other.mouvementsResultants != null) {
       this.mouvementsResultants =
         new Mouvement[other.mouvementsResultants.length];
@@ -87,6 +280,33 @@ public class Mouvement {
     return (quantite_entree == 0);
   }
 
+  public void controle(Connection connection) throws Exception {
+    if (article.exists(connection) == false) {
+      throw new Exception("Produit invalide");
+    }
+    if (magasin.exists(connection) == false) {
+      throw new Exception("Magasin invalide");
+    }
+    if (verifierStock(connection) == false) {
+      throw new Exception("Stock insufisant");
+    }
+  }
+
+  public boolean verifierStock(Connection con) throws Exception {
+    Mouvement[] avant = Mouvement.getMouvement(
+      null,
+      dateMouvement,
+      magasin,
+      article,
+      con
+    );
+    double stock = Mouvement.getReste(avant);
+    if (stock >= quantite_sortie) {
+      return true;
+    }
+    return false;
+  }
+
   public Mouvement(
     int idMouvement,
     String idArticle,
@@ -107,6 +327,7 @@ public class Mouvement {
     setMagasin(idmagasin);
     setArticle(idArticle);
     setPrixUnitaire(prixUnitaire);
+    setReste(getQuantite_entree());
   }
 
   public void setArticle(String idArticle) {
@@ -145,7 +366,14 @@ public class Mouvement {
       " and idarticle ='" +
       article.getIdArticle() +
       "'";
-    if (dateinitial == null) {
+    if (dateFinal == null & dateinitial == null) {
+      sql =
+        "select * from v_mouvement where idmagasin = " +
+        magasin.idMagasin +
+        " and idarticle ='" +
+        article.getIdArticle() +
+        "'";
+    } else if (dateinitial == null && dateFinal != null) {
       sql =
         "select * from v_mouvement where datemouvement <= '" +
         dateFinal +
@@ -154,7 +382,7 @@ public class Mouvement {
         " and idarticle ='" +
         article.getIdArticle() +
         "'";
-    } else if (dateFinal == null) {
+    } else if (dateFinal == null && dateinitial != null) {
       sql =
         "select * from v_mouvement where datemouvement > '" +
         dateinitial +
@@ -164,6 +392,8 @@ public class Mouvement {
         article.getIdArticle() +
         "'";
     }
+
+    System.out.println(sql);
     return sql;
   }
 
@@ -181,7 +411,7 @@ public class Mouvement {
       connection = c.getConnectionPostgresql();
       opened = true;
     }
-    String sql = generateRechercheSql(dateinitial, dateFinal, magasin,article);
+    String sql = generateRechercheSql(dateinitial, dateFinal, magasin, article);
     Statement stmt = connection.createStatement();
     try {
       ResultSet res = stmt.executeQuery(sql);

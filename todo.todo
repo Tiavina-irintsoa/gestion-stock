@@ -30,22 +30,20 @@ Etat de stock:
     ✔ constructeurs (string date1, stringdate2, string idatricile,string idmagasin) @done(23-11-07 20:35)
     ✔ getProduitsConernes() @done(23-11-07 20:55)
     ✔ getStocks() @done(23-11-07 20:55)
-    ☐ Test
+    ✔ Test @done(23-11-08 15:13)
 
 Insert:
-    ☐ produit.getProduitById()
-    ☐ produit.getOrderString()
-    ☐ magasin.getMagasinById()
-    ☐ magasin.exist()
-    ☐ produit.exists()
-    ☐ stock.getStock()
-    ☐ verifierStock()
-    ☐ mouvement.controle()
-    ☐ mouvement.getEntree() 
-    ☐ mouvement.getMouvementResultant()
-    ☐ insert()
-    ☐ sortir(String date, String mag, String idarticle, String quantite)
-    ☐ constructeur(String date, String mag, String idarticle, String quantite)
-    ☐ 
-
-
+    ✔ produit.getProduitById() @done(23-11-08 20:44)
+    ✔ produit.getOrderString() @done(23-11-08 20:45)
+    ✔ magasin.getMagasinById() @done(23-11-08 20:51)
+    ✔ magasin.exist() @done(23-11-08 20:51)
+    ✔ produit.exists() @done(23-11-08 20:51)
+    ✔ stock.getStock(date) @done(23-11-08 20:52)
+    ✔ verifierStock() @done(23-11-08 20:54)
+    ✔ mouvement.controle() @done(23-11-08 20:56)
+    ✔ mouvement.getEntree() @done(23-11-08 21:31)
+    ✔ mouvement.getMouvementResultant() @done(23-11-09 09:03)
+    ✔ completeData() @done(23-11-09 09:16)
+    ✔ insert() @done(23-11-09 09:16)
+    ✔ sortir(String date, String mag, String idarticle, String quantite) @done(23-11-09 09:36)
+    ✔ constructeur(String date, String mag, String idarticle, String quantite) @done(23-11-09 09:36)

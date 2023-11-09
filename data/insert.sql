@@ -24,4 +24,3 @@ INSERT INTO mouvement (idArticle, dateMouvement, quantite_entree, quantite_sorti
 ('R1011', '2023-11-05', 0, 50, 3, 5, 1,0);
 
 update mouvement set dateMouvement = '2023-07-07' where idmouvement <= 3;
-

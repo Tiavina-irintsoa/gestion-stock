@@ -1,7 +1,4 @@
-import java.sql.Date;
 import modele.EtatStock;
-import modele.Magasin;
-import modele.Mouvement;
 import modele.Stock;
 
 public class App {
