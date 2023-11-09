@@ -28,8 +28,9 @@ public class Mouvement {
     String date,
     String mag,
     String idarticle,
-    String quantite, Connection con
-  ) throws Exception{
+    String quantite,
+    Connection con
+  ) throws Exception {
     Mouvement mouvement = new Mouvement(date, mag, idarticle, quantite);
     mouvement.sortir(con);
   }
@@ -79,9 +80,12 @@ public class Mouvement {
       completeData(connection);
       this.insert(connection);
       for (Mouvement mouvement : mouvementsResultants) {
+        System.out.println(mouvement.getIdMouvement());
         mouvement.insert(connection);
       }
+      connection.commit();
     } catch (Exception e) {
+      connection.rollback();
       throw e;
     } finally {
       if (opened) {
@@ -119,8 +123,17 @@ public class Mouvement {
       pstmt.setDate(2, getDateMouvement());
       pstmt.setDouble(3, getQuantite_entree());
       pstmt.setDouble(4, getQuantite_sortie());
-      pstmt.setInt(5, getEntreeCorrespondanteId());
-      pstmt.setInt(6, getSortieCorrespondanteId());
+      if (entreeCorrespondante != null) {
+        pstmt.setInt(5, getEntreeCorrespondante().getIdMouvement());
+      } else {
+        pstmt.setNull(5, java.sql.Types.INTEGER);
+      }
+      if (sortieCorrespondante != null) {
+        pstmt.setInt(6, getSortieCorrespondante().getIdMouvement());
+      }
+      else{
+        pstmt.setNull(6, java.sql.Types.INTEGER);
+      }
       pstmt.setInt(7, getMagasin().getIdMagasin());
       pstmt.setDouble(8, getPrixUnitaire());
       ResultSet res = pstmt.executeQuery();
@@ -136,26 +149,13 @@ public class Mouvement {
     }
   }
 
-  public int getEntreeCorrespondanteId() {
-    if (entreeCorrespondante == null) {
-      return 0;
-    }
-    return entreeCorrespondante.getIdMouvement();
-  }
-
-  public int getSortieCorrespondanteId() {
-    if (sortieCorrespondante == null) {
-      return 0;
-    }
-    return sortieCorrespondante.getIdMouvement();
-  }
-
   public Mouvement[] getMouvementResultants(Connection con) throws Exception {
     Vector<Mouvement> resultants = new Vector<Mouvement>();
     Mouvement[] avant = getEntreeAvant(con);
     double sortietemp = getQuantite_sortie();
     double a_sortir = 0;
     for (Mouvement mouvement : avant) {
+      System.out.println("entree avant");
       if (sortietemp > mouvement.getReste()) {
         a_sortir = mouvement.getReste();
       } else {
@@ -178,18 +178,18 @@ public class Mouvement {
     String sql =
       "select v_entree.idmouvement, v_entree.quantite_entree - sum(v_sortie.quantite_sortie) as reste from v_entree join v_sortie on v_sortie.entree = v_entree.idmouvement where v_sortie.dateMouvement < '" +
       dateMouvement +
-      "' and idMagasin =" +
+      "' and v_entree.idMagasin =" +
       this.magasin.getIdMagasin() +
-      " and idarticle = '" +
+      " and v_entree.idarticle = '" +
       article.getIdArticle() +
-      "' group by v_entree.idmouvement order by v_entree.datemouvement " +
+      "' group by v_entree.idmouvement, v_entree.quantite_entree, v_entree.datemouvement order by v_entree.datemouvement  " +
       article.getOrderString();
     System.out.println(sql);
     Statement stmt = connection.createStatement();
     try {
       ResultSet res = stmt.executeQuery(sql);
       while (res.next()) {
-        if (reste > 0) {
+        if (res.getDouble("reste") > 0) {
           mouvements.add(
             new Mouvement(res.getInt("idmouvement"), res.getDouble("reste"))
           );
