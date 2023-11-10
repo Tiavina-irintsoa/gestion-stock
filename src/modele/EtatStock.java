@@ -32,6 +32,7 @@ public class EtatStock {
       arrayNode.add(stock.getJSON());
     }
     objectNode.set("listeStock",arrayNode);
+    objectNode.put("montant",getMontantTotal());
     System.out.println(objectNode.toString());
     return objectNode.toString();
   }
@@ -64,9 +65,9 @@ public class EtatStock {
     Connect connect = new Connect();
     Connection connection = connect.getConnectionPostgresql();
     try {
+      magasin = Magasin.getMagasinById(this.magasin.getIdMagasin(), connection);
       Article[] articles = getProduitsConcernes(connection);
       for (int i = 0; i < articles.length; i++) {
-        System.out.println(articles[i].getIdArticle());
         Stock stock = new Stock(articles[i]);
         stock.completeData(
           dateInitial,

@@ -21,4 +21,12 @@
         <servlet-name>InsertSortieServlet</servlet-name>
         <url-pattern>/ajoutSortie</url-pattern>
     </servlet-mapping>
+    <servlet>
+        <servlet-name>ListeMagasinServlet</servlet-name>
+        <servlet-class>servlet.ListeMagasinServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>ListeMagasinServlet</servlet-name>
+        <url-pattern>/magasins</url-pattern>
+    </servlet-mapping>
 </web-app>

@@ -17,6 +17,8 @@ public class EtatStockServlet extends HttpServlet {
   @Override
   protected void doPost(HttpServletRequest req, HttpServletResponse resp)
     throws ServletException, IOException {
+    PrintWriter out = resp.getWriter();
+
     try {
       Map<String, String[]> parameters = req.getParameterMap();
       String date1 = parameters.get("date1")[0];
@@ -28,9 +30,9 @@ public class EtatStockServlet extends HttpServlet {
       System.out.println(req.getParameter("date1"));
       resp.setContentType("application/json");
       EtatStock e = EtatStock.getEtatStock(date1, date2, idArticle, idMagasin);
-      PrintWriter out = resp.getWriter();
       out.print(e.getJSON());
     } catch (Exception e) {
+      out.print(e.getMessage());
       e.printStackTrace();
     }
   }

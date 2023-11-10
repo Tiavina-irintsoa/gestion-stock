@@ -1,6 +1,5 @@
 package modele;
 
-import com.fasterxml.jackson.databind.util.ExceptionUtil;
 import connexion.Connect;
 import java.sql.Connection;
 import java.sql.Date;
