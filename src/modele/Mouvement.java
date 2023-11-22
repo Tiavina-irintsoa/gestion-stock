@@ -555,9 +555,9 @@ public class Mouvement {
     Statement stmt = connection.createStatement();
     try {
       ResultSet res = stmt.executeQuery(sql);
+      Mouvement m =null;
       while (res.next()) {
-        liste.add(
-          new Mouvement(
+        m=new Mouvement(
             res.getInt("idmouvement"),
             res.getString("idarticle"),
             res.getDate("datemouvement"),
@@ -568,7 +568,10 @@ public class Mouvement {
             res.getDouble("prixunitaire"),
             0,
             res.getInt("etat")
-          )
+          );
+        m.setArticle(Article.getArticleById(m.getArticle().getIdArticle(), connection));
+        liste.add(
+          m
         );
       }
     } catch (Exception e) {
