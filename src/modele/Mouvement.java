@@ -1,16 +1,21 @@
 package modele;
 
-import connexion.Connect;
 import java.sql.Connection;
 import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Statement;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Vector;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+
+import connexion.Connect;
 
 public class Mouvement {
 
@@ -26,13 +31,25 @@ public class Mouvement {
   double reste;
   int etat;
   Mouvement[] stockMouvement;
+  Date dateValidation;
+
+  public Date getDateValidation() {
+    return dateValidation;
+  }
+
+  public void setDateValidation(Date dateValidation) {
+    this.dateValidation = dateValidation;
+  }
 
   public boolean aMouvementUlterieur(Connection connection) throws Exception {
     Mouvement last = magasin.getLastMouvementValide(connection, article);
-    if (last == null) {
-      return true;
+    if(last==null){
+      return false;
     }
-    return false;
+    if (last.getDateMouvement().before(dateMouvement)) {
+      return false;
+    }
+    return true;
   }
 
   public static void sortir(
@@ -54,12 +71,20 @@ public class Mouvement {
     setQuantite_sortie(quantite);
   }
 
-  public Mouvement(String id) throws Exception {
+  public Mouvement(String id,String datevalidation) throws Exception {
     setIdMouvement(id);
+    setDateValidation(datevalidation);
   }
-
-  public static void validerSortie(String id) throws Exception {
-    Mouvement aValider = new Mouvement(id);
+  public void setDateValidation(String date) throws Exception{
+    try {
+      setDateValidation(Date.valueOf(date));
+    } catch (Exception e) {
+      throw new Exception("Date invalide");
+    }
+  }
+  public static void validerSortie(String id,String date) throws Exception {
+    Mouvement aValider = new Mouvement(id,date);
+    // aValider.setDateValidation(date);
     aValider.valider(null);
   }
 
@@ -82,7 +107,14 @@ public class Mouvement {
       setMagasin(res.getString("idmagasin"));
       setQuantite_entree(res.getDouble("quantite_entree"));
       setQuantite_sortie(res.getDouble("quantite_sortie"));
+      setEtat(res.getInt("etat"));
       setDateMouvement(res.getDate("datemouvement"));
+      setArticle(
+        Article.getArticleById(getArticle().getIdArticle(), connection)
+      );
+      setMagasin(
+        Magasin.getMagasinById(getMagasin().getIdMagasin(), connection)
+      );
       return true;
     } catch (Exception e) {
       throw e;
@@ -127,7 +159,7 @@ public class Mouvement {
     }
   }
 
-  public void valider(int idmouvement, Connection connection) throws Exception {
+  public void valider(Connection connection) throws Exception {
     boolean opened = false;
     if (connection == null) {
       Connect c = new Connect();
@@ -135,6 +167,7 @@ public class Mouvement {
       opened = true;
     }
     try {
+
       this.controle(connection);
       this.completeData(connection);
       this.insertResultant(connection);
@@ -169,12 +202,13 @@ public class Mouvement {
     }
   }
 
-  public Mouvement(double quantite_sortie, Mouvement entree) throws Exception {
+  public Mouvement(double quantite_sortie, Mouvement entree,Date dv,Date datemouvement) throws Exception {
     setQuantite_sortie(quantite_sortie);
     setEntreeCorrespondante(entree);
     setArticle(entree.getArticle());
-    setDateMouvement(entree.getDateMouvement());
+    setDateMouvement(datemouvement);
     setMagasin(entree.getMagasin());
+    setDateValidation(dv);
   }
 
   public void completeData(Connection con) throws Exception {
@@ -186,9 +220,10 @@ public class Mouvement {
     boolean valide
   ) throws Exception {
     String sql =
-      "insert into mouvement (idArticle, dateMouvement, quantite_entree, quantite_sortie, entree, sortie, idmagasin,prixUnitaire,etat) values (?,?,?,?,?,?,?,?) returning idmouvement";
+      "insert into mouvement (idArticle, dateMouvement, quantite_entree, quantite_sortie, entree, idmagasin,prixUnitaire,etat) values (?,?,?,?,?,?,?,?) returning idmouvement";
     PreparedStatement pstmt = connection.prepareStatement(sql);
     pstmt.setString(1, getArticle().getIdArticle());
+    System.out.println("date insere : "+getDateMouvement());
     pstmt.setDate(2, getDateMouvement());
     pstmt.setDouble(3, getQuantite_entree());
     pstmt.setDouble(4, getQuantite_sortie());
@@ -208,17 +243,19 @@ public class Mouvement {
     return pstmt;
   }
 
-  public void valider(Connection connection) throws Exception {
+  public void ajoutValidation(Connection connection) throws Exception {
     boolean opened = false;
     if (connection == null) {
       Connect c = new Connect();
       connection = c.getConnectionPostgresql();
       opened = true;
     }
-    String sql = "insert into validation values (?,now())";
+    String sql = "insert into validation values (?,?)";
     PreparedStatement pstmt = connection.prepareStatement(sql);
     try {
       pstmt.setInt(1, this.getIdMouvement());
+      pstmt.setDate(2,this.getDateValidation());
+      pstmt.executeUpdate();
       if (opened) {
         connection.commit();
       }
@@ -249,7 +286,7 @@ public class Mouvement {
       res.next();
       setIdMouvement(res.getInt("idmouvement"));
       if (valide) {
-        this.valider(connection);
+        this.ajoutValidation(connection);
       }
       if (opened) {
         connection.commit();
@@ -277,7 +314,7 @@ public class Mouvement {
       } else {
         a_sortir = sortietemp;
       }
-      resultants.add(new Mouvement(a_sortir, mouvement));
+      resultants.add(new Mouvement(a_sortir, mouvement,this.getDateValidation(),this.getDateMouvement()));
       sortietemp = sortietemp - a_sortir;
       if (sortietemp == 0) {
         break;
@@ -331,20 +368,6 @@ public class Mouvement {
     this.magasin = other.magasin;
   }
 
-  public static Mouvement[] copyArray(Mouvement[] original) {
-    if (original == null) {
-      return null;
-    }
-
-    Mouvement[] copiedArray = new Mouvement[original.length];
-
-    for (int i = 0; i < original.length; i++) {
-      copiedArray[i] = new Mouvement(original[i]);
-    }
-
-    return copiedArray;
-  }
-
   public Mouvement() {}
 
   public Mouvement(int idMouvement) {
@@ -363,13 +386,16 @@ public class Mouvement {
     if (this.getById(connection) == false) {
       throw new Exception("Mouvement ineistant");
     }
+    if(this.getEtat()==10){
+      throw new Exception("Mouvement deja valide");
+    }
     if (article.exists(connection) == false) {
       throw new Exception("Produit invalide");
     }
     if (magasin.exists(connection) == false) {
       throw new Exception("Magasin invalide");
     }
-    if (aMouvementUlterieur(connection) == false) {
+    if (aMouvementUlterieur(connection) == true) {
       throw new Exception("Ce mouvement a un mouvement ulterieur valide");
     }
     setStockMouvement(
@@ -381,12 +407,7 @@ public class Mouvement {
   }
 
   public boolean verifierStock(Connection con) throws Exception {
-    Mouvement[] mvtStock = magasin.getStockMouvement(
-      con,
-      article,
-      dateMouvement
-    );
-    double stock = Mouvement.getReste(mvtStock);
+    double stock = Mouvement.getReste(getStockMouvement());
     if (stock >= quantite_sortie) {
       return true;
     }
@@ -425,7 +446,8 @@ public class Mouvement {
     int idmagasin,
     double prixUnitaire,
     double reste,
-    int etat
+    int etat,
+    Date datevalidation
   ) throws Exception {
     setIdMouvement(idMouvement);
     setDateMouvement(datemouvement);
@@ -437,6 +459,7 @@ public class Mouvement {
     setPrixUnitaire(prixUnitaire);
     setReste(reste);
     setEtat(etat);
+    setDateValidation(datevalidation);
   }
 
   public void setArticle(String idArticle) {
@@ -499,6 +522,7 @@ public class Mouvement {
     this.quantite_sortie = quantite_sortie;
   }
 
+  @JsonIgnore
   public Mouvement getEntreeCorrespondante() {
     return entreeCorrespondante;
   }
@@ -507,6 +531,7 @@ public class Mouvement {
     this.entreeCorrespondante = entreeCorrespondante;
   }
 
+  @JsonIgnore
   public Mouvement[] getMouvementsResultants() {
     return mouvementsResultants;
   }
@@ -529,21 +554,49 @@ public class Mouvement {
     }
     return "Valide";
   }
-  public static String getJsonById(String id) throws Exception{
+
+  @JsonIgnore
+  public static String getJsonById(String id) throws Exception {
     Mouvement m = new Mouvement(id);
     m.getById(null);
+    return m.getObjectNode().toPrettyString();
+  }
+
+  public Mouvement(String id) throws Exception{
+    setIdMouvement(id);
+  }
+  @JsonIgnore
+  public ObjectNode getObjectNode() {
+    ObjectMapper objectMapper = new ObjectMapper();
+    ObjectNode mvt = objectMapper.createObjectNode();
+    mvt.set("Article", article.getObjectNode());
+    mvt.set("Magasin", magasin.getObjectNode());
+
+    mvt.put("dateMouvement", getDateMouvement().toString());
+    mvt.put("idmouvement", getIdMouvement());
+    mvt.put("quantite_entree", getQuantite_entree());
+    mvt.put("quantite_sortie", getQuantite_sortie());
+    mvt.put("prixunitaire", getPrixUnitaire());
+    mvt.put("etatString", getEtatString());
+    mvt.put("etat", getEtat());
+
+    return mvt;
+  }
+
+  @JsonIgnore
+  public static String getJsonAll() throws Exception {
     ObjectMapper objectMapper = new ObjectMapper();
     objectMapper.enable(SerializationFeature.INDENT_OUTPUT);
-    String json = objectMapper.writeValueAsString(m);
-    return json;
+    List<Mouvement> all = getAll(null);
+    ArrayNode arrayNode = objectMapper.createArrayNode();
+    for (Mouvement mouvement : all) {
+      arrayNode.add(mouvement.getObjectNode());
+    }
+    return arrayNode.toString();
   }
-  public static String  getJsonAll() throws Exception{
-    ObjectMapper objectMapper = new ObjectMapper();
-    objectMapper.enable(SerializationFeature.INDENT_OUTPUT);
-    String json = objectMapper.writeValueAsString(getAll(null));
-    return json;
-  }
-  public static Vector<Mouvement> getAll(Connection connection) throws Exception {
+
+  public static Vector<Mouvement> getAll(Connection connection)
+    throws Exception {
     Vector<Mouvement> liste = new Vector<Mouvement>();
     boolean opened = false;
     if (connection == null) {
@@ -551,13 +604,15 @@ public class Mouvement {
       connection = c.getConnectionPostgresql();
       opened = true;
     }
-    String sql = "select * from mouvement";
+    String sql =
+      "select * from v_mouvement order by datemouvement desc, idarticle asc, idmagasin asc ";
     Statement stmt = connection.createStatement();
     try {
       ResultSet res = stmt.executeQuery(sql);
-      Mouvement m =null;
+      Mouvement m = null;
       while (res.next()) {
-        m=new Mouvement(
+        m =
+          new Mouvement(
             res.getInt("idmouvement"),
             res.getString("idarticle"),
             res.getDate("datemouvement"),
@@ -567,12 +622,16 @@ public class Mouvement {
             res.getInt("idmagasin"),
             res.getDouble("prixunitaire"),
             0,
-            res.getInt("etat")
+            res.getInt("etat"),
+            res.getDate("datevalidation")
           );
-        m.setArticle(Article.getArticleById(m.getArticle().getIdArticle(), connection));
-        liste.add(
-          m
+        m.setArticle(
+          Article.getArticleById(m.getArticle().getIdArticle(), connection)
         );
+        m.setMagasin(
+          Magasin.getMagasinById(m.getMagasin().getIdMagasin(), connection)
+        );
+        liste.add(m);
       }
     } catch (Exception e) {
       throw e;

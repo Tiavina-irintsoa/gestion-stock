@@ -1,10 +1,15 @@
-create or replace view v_mouvement_valide as (
-    select
+create or replace view v_mouvement as (
+     select
     mouvement.*,validation.dateValidation
     from mouvement 
     left join validation
         on validation.idmouvement = mouvement.idmouvement
-    where validation.idmouvement is not null
+);
+create or replace view v_mouvement_valide as (
+    select
+    *
+    from v_mouvement
+    where dateValidation is not null
 );
 
 create or replace view v_entree as (

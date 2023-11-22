@@ -31,8 +31,8 @@ public class EtatStock {
     for (Stock stock : listeStock) {
       arrayNode.add(stock.getJSON());
     }
-    objectNode.set("listeStock",arrayNode);
-    objectNode.put("montant",getMontantTotal());
+    objectNode.set("listeStock", arrayNode);
+    objectNode.put("montant", getMontantTotal());
     System.out.println(objectNode.toString());
     return objectNode.toString();
   }
@@ -40,10 +40,13 @@ public class EtatStock {
   public EtatStock(
     String dateInitial,
     String dateFinal,
-    String idArticle ,Magasin magasin ) throws Exception {
+    String idArticle,
+    Magasin magasin
+  ) throws Exception {
     setDateInitial(dateInitial);
     setDateFinal(dateFinal);
     setArticle(idArticle);
+    setMagasin(magasin);
   }
 
   public Stock[] listeStock() throws Exception {

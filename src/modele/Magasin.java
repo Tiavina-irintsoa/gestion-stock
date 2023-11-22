@@ -16,11 +16,13 @@ public class Magasin {
   int idMagasin;
   String nomMagasin;
 
-  public Magasin(String id){
+  public Magasin(String id) {
     setIdMagasin(id);
   }
-  public EtatStock getEtatStock(String date1, String date2, String idarticle) throws Exception {
-    EtatStock etatStock = new EtatStock(date1, date2, idarticle,this);
+
+  public EtatStock getEtatStock(String date1, String date2, String idarticle)
+    throws Exception {
+    EtatStock etatStock = new EtatStock(date1, date2, idarticle, this);
     etatStock.setListeStock(etatStock.listeStock());
     return etatStock;
   }
@@ -29,7 +31,6 @@ public class Magasin {
     Connection connection,
     Article article
   ) throws Exception {
-    Mouvement last = null;
     boolean opened = false;
     if (connection == null) {
       Connect c = new Connect();
@@ -37,13 +38,33 @@ public class Magasin {
       opened = true;
     }
     String sql =
-      "select * from v_sortie where idarticle = '" +
+      "select * from getLastMouvement('" +
       article.getIdArticle() +
-      "' and idmagasin = " +
-      getIdMagasin();
+      "'," +
+      this.getIdMagasin() +
+      ")";
     System.out.println(sql);
     Statement stmt = connection.createStatement();
-    try {} catch (Exception e) {
+    try {
+      ResultSet res = stmt.executeQuery(sql);
+      if(res.next()==false){
+        return null;
+      }
+      
+      return new Mouvement(
+        res.getInt("idmouvement"),
+        res.getString("idarticle"),
+        res.getDate("datemouvement"),
+        res.getDouble("quantite_entree"),
+        res.getDouble("quantite_sortie"),
+        res.getInt("entree"),
+        res.getInt("idmagasin"),
+        res.getDouble("prixunitaire"),
+        0,
+        res.getInt("etat"),
+        res.getDate("datevalidation")
+      );
+    } catch (Exception e) {
       throw e;
     } finally {
       stmt.close();
@@ -51,7 +72,6 @@ public class Magasin {
         connection.close();
       }
     }
-    return last;
   }
 
   public Mouvement[] getStockMouvement(
@@ -96,7 +116,8 @@ public class Magasin {
             res.getInt("idmagasin"),
             res.getDouble("prixunitaire"),
             entree - utilise,
-            res.getInt("etat")
+            res.getInt("etat"),
+            res.getDate("datevalidation")
           )
         );
       }
@@ -213,10 +234,10 @@ public class Magasin {
   public String getNomMagasin() {
     return nomMagasin;
   }
-  public void setIdMagasin(String idmagasin){
+
+  public void setIdMagasin(String idmagasin) {
     setIdMagasin(Integer.valueOf(idmagasin));
   }
-
 
   public void setNomMagasin(String nomMagasin) {
     this.nomMagasin = nomMagasin;

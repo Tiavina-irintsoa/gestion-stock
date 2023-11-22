@@ -1,5 +1,6 @@
 package modele;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import connexion.Connect;
@@ -14,6 +15,7 @@ public class Article {
   Unite unite;
   int methodeStockage;
 
+  @JsonIgnore
   public String getOrderString() {
     if (methodeStockage == -1) {
       return "asc";
@@ -61,6 +63,7 @@ public class Article {
     setNomArticle(article.getNomArticle());
     return true;
   }
+  @JsonIgnore
   public ObjectNode getObjectNode() {
     ObjectMapper objectMapper = new ObjectMapper();
     ObjectNode objectNode = objectMapper.createObjectNode();

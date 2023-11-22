@@ -26,5 +26,5 @@ create table mouvement (
 );
 create table validation(
     idmouvement integer references mouvement(idmouvement),
-     dateValidation timestamp
+     dateValidation date
 );
