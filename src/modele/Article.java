@@ -6,7 +6,6 @@ import connexion.Connect;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.Statement;
-import javax.naming.spi.DirStateFactory.Result;
 
 public class Article {
 
@@ -17,12 +16,10 @@ public class Article {
 
   public String getOrderString() {
     if (methodeStockage == -1) {
-      return "desc";
+      return "asc";
     }
-    return "asc";
+    return "desc";
   }
-
-  
   public static Article getArticleById(String id, Connection connection)
     throws Exception {
     boolean opened = false;

@@ -20,7 +20,11 @@ create table mouvement (
     quantite_entree numeric,
     quantite_sortie numeric,
     entree integer references mouvement(idmouvement), 
-    sortie integer references mouvement(idmouvement), 
     idmagasin integer references magasin(idmagasin), 
-    prixUnitaire numeric
+    prixUnitaire numeric,
+    etat integer 
+);
+create table validation(
+    idmouvement integer references mouvement(idmouvement),
+     dateValidation timestamp
 );

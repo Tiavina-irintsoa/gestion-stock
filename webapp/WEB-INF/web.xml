@@ -29,4 +29,28 @@
         <servlet-name>ListeMagasinServlet</servlet-name>
         <url-pattern>/magasins</url-pattern>
     </servlet-mapping>
+        <servlet>
+        <servlet-name>MouvementsServlet</servlet-name>
+        <servlet-class>servlet.MouvementsServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>MouvementsServlet</servlet-name>
+        <url-pattern>/mouvement</url-pattern>
+    </servlet-mapping>
+    <servlet>
+        <servlet-name>DetailsMouvement</servlet-name>
+        <servlet-class>servlet.DetailsMouvement</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>DetailsMouvement</servlet-name>
+        <url-pattern>/details</url-pattern>
+    </servlet-mapping>
+        <servlet>
+        <servlet-name>ValidationServlet</servlet-name>
+        <servlet-class>servlet.ValidationServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>ValidationServlet</servlet-name>
+        <url-pattern>/validation</url-pattern>
+    </servlet-mapping>
 </web-app>

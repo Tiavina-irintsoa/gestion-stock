@@ -6,27 +6,20 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.Map;
-import modele.EtatStock;
-import modele.Magasin;
+import modele.Mouvement;
 
-public class EtatStockServlet extends HttpServlet {
+public class DetailsMouvement extends HttpServlet {
 
   @Override
-  protected void doPost(HttpServletRequest req, HttpServletResponse resp)
+  protected void doGet(HttpServletRequest req, HttpServletResponse resp)
     throws ServletException, IOException {
     PrintWriter out = resp.getWriter();
-
     try {
-      Magasin m = new Magasin(req.getParameter("idMagasin"));
-      EtatStock e = m.getEtatStock(
-        req.getParameter("date1"),
-        req.getParameter("date2"),
-        req.getParameter("idArticle")
-      );
       resp.setContentType("application/json");
-      out.print(e.getJSON());
+      String json = Mouvement.getJsonById(req.getParameter("idmouvement"));
+      out.print(json);
     } catch (Exception e) {
+      resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
       out.print(e.getMessage());
       e.printStackTrace();
     }

@@ -40,24 +40,10 @@ public class EtatStock {
   public EtatStock(
     String dateInitial,
     String dateFinal,
-    String idArticle,
-    String idMagasin
-  ) throws Exception {
+    String idArticle ,Magasin magasin ) throws Exception {
     setDateInitial(dateInitial);
     setDateFinal(dateFinal);
     setArticle(idArticle);
-    setMagasin(idMagasin);
-  }
-
-  public static EtatStock getEtatStock(
-    String date1,
-    String date2,
-    String idarticle,
-    String idMagasin
-  ) throws Exception {
-    EtatStock etatStock = new EtatStock(date1, date2, idarticle, idMagasin);
-    etatStock.setListeStock(etatStock.listeStock());
-    return etatStock;
   }
 
   public Stock[] listeStock() throws Exception {

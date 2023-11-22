@@ -3,10 +3,10 @@ package modele;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import connexion.Connect;
 import java.sql.Connection;
+import java.sql.Date;
 import java.sql.ResultSet;
 import java.sql.Statement;
 import java.util.Vector;
@@ -15,6 +15,101 @@ public class Magasin {
 
   int idMagasin;
   String nomMagasin;
+
+  public Magasin(String id){
+    setIdMagasin(id);
+  }
+  public EtatStock getEtatStock(String date1, String date2, String idarticle) throws Exception {
+    EtatStock etatStock = new EtatStock(date1, date2, idarticle,this);
+    etatStock.setListeStock(etatStock.listeStock());
+    return etatStock;
+  }
+
+  public Mouvement getLastMouvementValide(
+    Connection connection,
+    Article article
+  ) throws Exception {
+    Mouvement last = null;
+    boolean opened = false;
+    if (connection == null) {
+      Connect c = new Connect();
+      connection = c.getConnectionPostgresql();
+      opened = true;
+    }
+    String sql =
+      "select * from v_sortie where idarticle = '" +
+      article.getIdArticle() +
+      "' and idmagasin = " +
+      getIdMagasin();
+    System.out.println(sql);
+    Statement stmt = connection.createStatement();
+    try {} catch (Exception e) {
+      throw e;
+    } finally {
+      stmt.close();
+      if (opened) {
+        connection.close();
+      }
+    }
+    return last;
+  }
+
+  public Mouvement[] getStockMouvement(
+    Connection connection,
+    Article article,
+    Date datebefore
+  ) throws Exception {
+    Vector<Mouvement> mouvements = new Vector<Mouvement>();
+    boolean opened = false;
+    if (connection == null) {
+      Connect c = new Connect();
+      connection = c.getConnectionPostgresql();
+      opened = true;
+    }
+    String sql =
+      "select * from getEtatStockMouvement('" +
+      datebefore +
+      "'," +
+      this.getIdMagasin() +
+      ",'" +
+      article.getIdArticle() +
+      "','" +
+      article.getOrderString() +
+      "')";
+    System.out.println(sql);
+    Statement stmt = connection.createStatement();
+    try {
+      ResultSet res = stmt.executeQuery(sql);
+      double entree = 0;
+      double utilise = 0;
+      while (res.next()) {
+        entree = res.getDouble("quantite_entree");
+        utilise = res.getDouble("utilise");
+        mouvements.add(
+          new Mouvement(
+            res.getInt("idmouvement"),
+            res.getString("idarticle"),
+            res.getDate("datemouvement"),
+            res.getDouble("quantite_entree"),
+            res.getDouble("quantite_sortie"),
+            res.getInt("entree"),
+            res.getInt("idmagasin"),
+            res.getDouble("prixunitaire"),
+            entree - utilise,
+            res.getInt("etat")
+          )
+        );
+      }
+    } catch (Exception e) {
+      throw e;
+    } finally {
+      stmt.close();
+      if (opened) {
+        connection.close();
+      }
+    }
+    return mouvements.toArray(new Mouvement[mouvements.size()]);
+  }
 
   public static String getJsonAll() throws Exception {
     ObjectMapper objectMapper = new ObjectMapper();
@@ -118,6 +213,10 @@ public class Magasin {
   public String getNomMagasin() {
     return nomMagasin;
   }
+  public void setIdMagasin(String idmagasin){
+    setIdMagasin(Integer.valueOf(idmagasin));
+  }
+
 
   public void setNomMagasin(String nomMagasin) {
     this.nomMagasin = nomMagasin;
