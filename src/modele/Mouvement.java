@@ -309,15 +309,17 @@ public class Mouvement {
     double sortietemp = getQuantite_sortie();
     double a_sortir = 0;
     for (Mouvement mouvement : this.getStockMouvement()) {
-      if (sortietemp > mouvement.getReste()) {
+      if(mouvement.estEntree()){
+        if (sortietemp > mouvement.getReste()) {
         a_sortir = mouvement.getReste();
-      } else {
-        a_sortir = sortietemp;
-      }
-      resultants.add(new Mouvement(a_sortir, mouvement,this.getDateValidation(),this.getDateMouvement()));
-      sortietemp = sortietemp - a_sortir;
-      if (sortietemp == 0) {
-        break;
+        } else {
+          a_sortir = sortietemp;
+        }
+        resultants.add(new Mouvement(a_sortir, mouvement,this.getDateValidation(),this.getDateMouvement()));
+        sortietemp = sortietemp - a_sortir;
+        if (sortietemp == 0) {
+          break;
+        }
       }
     }
     return resultants.toArray(new Mouvement[resultants.size()]);
@@ -339,11 +341,18 @@ public class Mouvement {
     this.prixUnitaire = prixUnitaire;
   }
 
-  public static double getReste(Mouvement[] mouvement) {
+  public static double getStock(Mouvement[] mouvement) {
     double s = 0;
     for (int i = 0; i < mouvement.length; i++) {
       s += mouvement[i].getQuantite_entree();
       s -= mouvement[i].getQuantite_sortie();
+    }
+    return s;
+  }
+  public static double getReste(Mouvement[] mouvement){
+     double s = 0;
+    for (int i = 0; i < mouvement.length; i++) {
+      s += mouvement[i].getReste();
     }
     return s;
   }
@@ -407,7 +416,7 @@ public class Mouvement {
   }
 
   public boolean verifierStock(Connection con) throws Exception {
-    double stock = Mouvement.getReste(getStockMouvement());
+    double stock = Mouvement.getStock(getStockMouvement());
     if (stock >= quantite_sortie) {
       return true;
     }

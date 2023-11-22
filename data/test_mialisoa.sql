@@ -32,7 +32,8 @@ INSERT INTO mouvement (idArticle, dateMouvement, quantite_entree, quantite_sorti
 
 
 INSERT INTO mouvement (idArticle, dateMouvement, quantite_entree, quantite_sortie, entree,  idmagasin,prixUnitaire, etat) VALUES
-('R101', '2022-10-08', 100, 0, NULL, 1,2000,10);
+('R101', '2022-10-19', 150, 0, NULL, 1,2000,10);
+insert into validation values(28,'2022-10-19');
 
 insert into validation values(1,'2023-01-15');
 insert into validation values(2,'2022-02-20');

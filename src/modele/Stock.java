@@ -47,7 +47,7 @@ public class Stock {
   public double getMontant() {
     double montant = 0;
     for (int j = 0; j < mouvementAvantDate2.length; j++) {
-      montant += mouvementAvantDate2[j].getPrixUnitaire() * getReste();
+      montant += mouvementAvantDate2[j].getPrixUnitaire() * mouvementAvantDate2[j].getReste();
     }
     return montant;
   }

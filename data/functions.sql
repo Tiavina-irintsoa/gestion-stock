@@ -29,7 +29,7 @@ AS
         RETURN QUERY execute'
            select v_mouvement_valide.*, coalesce(sum(v_sortie.quantite_sortie),0) as utilise from v_mouvement_valide left join v_sortie
         on v_sortie.entree = v_mouvement_valide.idmouvement
-        and v_sortie.datevalidation <'''||datebefore||''' where v_mouvement_valide.idmagasin = '||magasin||' and v_mouvement_valide.idarticle = '''||article||''' and v_mouvement_valide.datevalidation < '''||datebefore||''' group by v_mouvement_valide.idmouvement,v_mouvement_valide.quantite_entree,v_mouvement_valide.quantite_sortie,v_mouvement_valide.idmagasin,v_mouvement_valide.entree,v_mouvement_valide.prixUnitaire,v_mouvement_valide.idarticle,v_mouvement_valide.datemouvement,v_mouvement_valide.etat,v_mouvement_valide.dateValidation order by v_mouvement_valide.datemouvement '||orderby||'';
+        and v_sortie.datevalidation <='''||datebefore||''' where v_mouvement_valide.idmagasin = '||magasin||' and v_mouvement_valide.idarticle = '''||article||''' and v_mouvement_valide.datevalidation <= '''||datebefore||''' group by v_mouvement_valide.idmouvement,v_mouvement_valide.quantite_entree,v_mouvement_valide.quantite_sortie,v_mouvement_valide.idmagasin,v_mouvement_valide.entree,v_mouvement_valide.prixUnitaire,v_mouvement_valide.idarticle,v_mouvement_valide.datemouvement,v_mouvement_valide.etat,v_mouvement_valide.dateValidation order by v_mouvement_valide.datemouvement '||orderby||'';
     END;
     $$ LANGUAGE plpgsql;
 select * from getEtatStockMouvement('2022-10-11',3,'R101','asc');
