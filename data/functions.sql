@@ -9,7 +9,7 @@ RETURNS TABLE (
     idmagasin integer,
     prixUnitaire numeric,
     etat integer,
-    dateValidation date
+dateValidation date
 )
 AS $$
 BEGIN 
@@ -18,7 +18,6 @@ BEGIN
         USING article, magasin;
 END;
 $$ LANGUAGE plpgsql;
-
 
 create or replace function getEtatStockMouvement(datebefore date,magasin integer,article text,orderby text) 
 RETURNS TABLE (

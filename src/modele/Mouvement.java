@@ -46,12 +46,23 @@ public class Mouvement {
     if(last==null){
       return false;
     }
-    if (last.getDateMouvement().before(dateMouvement)) {
+    // if (last.getDateMouvement().after(dateMouvement)) {
+    //   return true;
+    // }
+    // else if(last.getDateMouvement().before(dateMouvement) && last.getDateValidation().after(getDateValidation())){
+    //   System.out.println();
+    //   return true;
+    // }
+    System.out.println("last:"+last.getDateValidation());
+    System.out.println("now():"+getDateValidation());
+    if(last.getDateValidation().compareTo(getDateMouvement())==0){
       return false;
     }
-    return true;
+    if(last.getDateValidation().after(getDateMouvement())){
+      return true;
+    }
+    return false;
   }
-
   public static void sortir(
     String date,
     String mag,
@@ -309,7 +320,7 @@ public class Mouvement {
     double sortietemp = getQuantite_sortie();
     double a_sortir = 0;
     for (Mouvement mouvement : this.getStockMouvement()) {
-      if(mouvement.estEntree()){
+      if(mouvement.estEntree() && mouvement.getReste()>0){
         if (sortietemp > mouvement.getReste()) {
         a_sortir = mouvement.getReste();
         } else {

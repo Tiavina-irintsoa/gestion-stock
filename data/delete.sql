@@ -1,3 +1,4 @@
+delete from validation;
 delete from mouvement;
 delete from magasin;
 delete from article;

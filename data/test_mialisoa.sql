@@ -11,7 +11,8 @@ INSERT INTO article (idArticle, nomArticle, idunite, methodeStockage) VALUES
 ('R1011', 'Riz Gasy Fotsy', 1, 1),
 ('A201', 'Ail en poudre', 1, -1),
 ('A202', 'Ail Frais', 1, 1);
-
+INSERT INTO article (idArticle, nomArticle, idunite, methodeStockage) VALUES
+('R1011', 'Riz Gasy Fotsy', 1, 1);
 INSERT INTO magasin (nomMagasin) VALUES
 ('TNR101'),
 ('TNR102'),
